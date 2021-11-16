@@ -306,7 +306,7 @@ int isSymbol(char *input, lexeme *list, int k)
     return length;
 }
 
-lexeme *lexanalyzer(char *input)
+lexeme *lexanalyzer(char *input, int printFlag)
 {
     int i = 0, add; // i = input counter , add to increment i past the already used input
     list = malloc(MAX_NUMBER_TOKENS * sizeof(struct lexeme));
@@ -348,7 +348,8 @@ lexeme *lexanalyzer(char *input)
             return NULL;
         i += add;
     }
-    printtokens();
+    if (printFlag == 1)
+        printtokens();
     
     return list;
 }
