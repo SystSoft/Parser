@@ -40,7 +40,7 @@ int base(int l, int *pas, int BP)
     return arb;
 }
 
-int main(int argc, char *argv[])
+int vm(int argc, char *argv[])
 {
     FILE * ifp;
     ifp = fopen(argv[1], "r");
