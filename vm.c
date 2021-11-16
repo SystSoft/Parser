@@ -4,22 +4,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "compiler.h"
 
 // Global Variables
 #define MAX_PAS_LENGTH 500
-
-struct instruction
-{
-    int OP;         // Operation code
-    int L;          // Lexicographical level
-    int M;          // Modifier
-};
 
 void print_execution(int line, char *opname, struct instruction *IR, int PC, int BP, int SP, int DP, int *pas, int GP)
 {
     int i;
     // print out instruction and registers
-    printf("%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR->L, IR->M, PC, BP, SP, DP);
+    printf("%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR->l, IR->m, PC, BP, SP, DP);
     
     // print data section
     for (i = GP; i <= DP; i++)
@@ -35,13 +29,13 @@ void print_execution(int line, char *opname, struct instruction *IR, int PC, int
     printf("\n");
 }
 
-int base(int L, int *pas, int BP)
+int base(int l, int *pas, int BP)
 {
     int arb = BP;   // arb = activation record base
-    while ( L > 0)     //find base L levels down
+    while ( l > 0)     //find base L levels down
     {
         arb = pas[arb];
-        L--;
+        l--;
     }
     return arb;
 }
@@ -83,33 +77,33 @@ int main(int argc, char *argv[])
     while (halt == 1)
     {
         // Fetch Cycle
-        IR->OP = pas[PC];
-        IR->L = pas[PC + 1];
-        IR->M = pas[PC + 2];
+        IR->opcode = pas[PC];
+        IR->l = pas[PC + 1];
+        IR->m = pas[PC + 2];
         PC += 3;
         int line = (PC/3)-1;    // track line number
 
         // Execute Cycle
-        switch(IR->OP)
+        switch(IR->opcode)
         {
             //LIT
             case 1:
                 if(BP == GP)
                 {
                     DP = DP+1;
-                    pas[DP] = IR->M;
+                    pas[DP] = IR->m;
                 }
                 else
                 {
                     SP = SP-1;
-                    pas[SP] = IR->M;
+                    pas[SP] = IR->m;
                 }
                 print_execution(line, "LIT", IR, PC, BP, SP, DP, pas, GP);
                 break;
                 
             // OPR
             case 2:
-                switch(IR->M)
+                switch(IR->m)
                 {
                     //RTN
                     case 0:
@@ -317,17 +311,17 @@ int main(int argc, char *argv[])
                 if(BP == GP)
                 {
                     DP = DP+1;
-                    pas[DP] = pas[GP+IR->M];
+                    pas[DP] = pas[GP+IR->m];
                 }
-                else if((base(IR->L, pas, BP)) == GP)
+                else if((base(IR->l, pas, BP)) == GP)
                 {
                     SP = SP-1;
-                    pas[SP] = pas[GP+IR->M];
+                    pas[SP] = pas[GP+IR->m];
                 }
                 else
                 {
                     SP = SP-1;
-                    pas[SP] = pas[(base(IR->L, pas, BP))-IR->M];
+                    pas[SP] = pas[(base(IR->l, pas, BP))-IR->m];
                 }
                 print_execution(line, "LOD", IR, PC, BP, SP, DP, pas, GP);
                 break;
@@ -336,17 +330,17 @@ int main(int argc, char *argv[])
             case 4:
                 if(BP == GP)
                 {
-                    pas[GP+IR->M] = pas[DP];
+                    pas[GP+IR->m] = pas[DP];
                     DP = DP-1;
                 }
-                else if((base(IR->L, pas, BP)) == GP)
+                else if((base(IR->l, pas, BP)) == GP)
                 {
-                    pas[GP+IR->M] = pas[SP];
+                    pas[GP+IR->m] = pas[SP];
                     SP = SP+1;
                 }
                 else
                 {
-                    pas[(base(IR->L, pas, BP))-IR->M] = pas[SP];
+                    pas[(base(IR->l, pas, BP))-IR->m] = pas[SP];
                     SP = SP+1;
                 }
                 print_execution(line, "STO", IR, PC, BP, SP, DP, pas, GP);
@@ -355,11 +349,11 @@ int main(int argc, char *argv[])
             //CAL
             case 5:
                 pas[SP-1] = 0;          // Functional Value
-                pas[SP-2] = base(IR->L, pas, BP);           // Static Link
+                pas[SP-2] = base(IR->l, pas, BP);           // Static Link
                 pas[SP-3] = BP;         // Dynamic Link
                 pas[SP-4] = PC;         // Return Address
                 BP = SP-1;
-                PC = IR->M;
+                PC = IR->m;
                 print_execution(line, "CAL", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
@@ -367,18 +361,18 @@ int main(int argc, char *argv[])
             case 6:
                 if(BP == GP)
                 {
-                    DP += IR->M;
+                    DP += IR->m;
                 }
                 else
                 {
-                    SP -= IR->M;
+                    SP -= IR->m;
                 }
                 print_execution(line, "INC", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
             //JMP
             case 7:
-                PC = IR->M;
+                PC = IR->m;
                 print_execution(line, "JMP", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
@@ -388,7 +382,7 @@ int main(int argc, char *argv[])
                 {
                     if(pas[DP] == 0)
                     {
-                        PC = IR->M;
+                        PC = IR->m;
                     }
                     DP = DP-1;
                 }
@@ -396,7 +390,7 @@ int main(int argc, char *argv[])
                 {
                     if(pas[SP] == 0)
                     {
-                        PC = IR->M;
+                        PC = IR->m;
                     }
                     SP = SP+1;
                 }
@@ -405,7 +399,7 @@ int main(int argc, char *argv[])
 
           // SYS
           case 9:
-              switch(IR->M)
+              switch(IR->m)
               {
                   case 1:
                       printf("Top of Stack Value: ");
