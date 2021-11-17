@@ -87,9 +87,7 @@ int MULTIPLEDECLARATIONCHECK(lexeme token)
         {
             // checks to see if it’s unmarked
             if (table[i].mark == 0 && table[i].level == curlevel)
-            {
                     return i;
-            }
         }
             
     }
@@ -149,9 +147,7 @@ void program(lexeme *list)
     block(list);
     
     if (list[tIndex].type != periodsym)
-    {
         printparseerror(1);
-    }
         
     emit(9, 0, 3);        // HALT
         
@@ -213,12 +209,12 @@ void const_declaration(lexeme *list)
             procedure_idx++;
             
             if (list[procedure_idx].type != numbersym)
-                printparseerror(2);
+                printparseerror(2);         // number missing
             
             addToSymbolTable(1, identsave, atoi(list[procedure_idx].name), curlevel, 0, 0);
             procedure_idx++;
+        
         }while (list[procedure_idx].type == commasym);
-    
     
         if (list[procedure_idx].type != semicolonsym)
         {
@@ -242,10 +238,10 @@ int var_declaration(lexeme *list)
             procedure_idx++;
             
             if (list[procedure_idx].type != identsym)
-                printparseerror(3);
+                printparseerror(3);     // ident missing
                                 
             int symidx = MULTIPLEDECLARATIONCHECK(list[procedure_idx]);
-                
+            
             if (symidx != -1)
                 printparseerror(18);
             
@@ -290,7 +286,6 @@ void procedure_dec(lexeme *list)
                 printparseerror(4);        // must end in semicolon
             
             procedure_idx++;
-            
             block(list);
             
             if (list[procedure_idx].type != semicolonsym)
@@ -318,6 +313,7 @@ void statement(lexeme *list)
         if(list[procedure_idx].type!=assignsym)
             printparseerror(5);         // missing :=
         
+        procedure_idx++;
         expression(list);
         emit(4, curlevel-table[symldx].level, table[symldx].addr);          //STO
         return;
@@ -338,7 +334,7 @@ void statement(lexeme *list)
                 printparseerror(15);
         }
         procedure_idx++;
-        return;             //?
+        return;
     }
     if(list[procedure_idx].type==ifsym)
     {
@@ -362,9 +358,7 @@ void statement(lexeme *list)
             code[jmpIdx].m = cIndex*3;
         }
         else
-        {
             code[jpcIdx].m = cIndex*3;
-        }
         return;
     }
     if(list[procedure_idx].type==whilesym)
@@ -480,6 +474,7 @@ void condition(lexeme *list)
     
 void expression(lexeme *list)
 {
+    printf("expression %s\n", list[procedure_idx].name);
     if(list[procedure_idx].type == subsym)
     {
         procedure_idx++;
@@ -488,7 +483,7 @@ void expression(lexeme *list)
         
         while((list[procedure_idx].type==addsym)||(list[procedure_idx].type==subsym))
         {
-            if(list[procedure_idx].type ==addsym)
+            if(list[procedure_idx].type == addsym)
             {
                 procedure_idx++;
                 term(list);
@@ -531,6 +526,7 @@ void expression(lexeme *list)
     
 void term(lexeme *list)
 {
+    printf("term %s\n", list[procedure_idx-1].name);
     factor(list);
     while((list[procedure_idx].type==multsym)||(list[procedure_idx].type==divsym)||(list[procedure_idx].type==modsym))
     {
@@ -557,6 +553,7 @@ void term(lexeme *list)
     
 void factor(lexeme *list)
 {
+    printf("factor %s\n", list[procedure_idx].name);
     if(list[procedure_idx].type==identsym)
     {
         int symIdx_var = findsymbol(list[procedure_idx],2);
@@ -567,7 +564,10 @@ void factor(lexeme *list)
             if(findsymbol(list[procedure_idx],3)!=-1)
                 printparseerror(19);
             else
+            {
+                printf("hello 4 %d \n\n", findsymbol(list[procedure_idx],3));
                 printparseerror(18);
+            }
         }
         
         if(symIdx_var==-1)
@@ -665,10 +665,10 @@ void printparseerror(int err_code)
             break;
     }
     
-    free(code);
-    free(table);
-    code = NULL;
-    exit(0);
+    //free(code);
+    //free(table);
+    //code = NULL;
+    //exit(0);
 }
 
 void printsymboltable()
