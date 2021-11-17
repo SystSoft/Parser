@@ -662,10 +662,10 @@ void printparseerror(int err_code)
             break;
     }
     
-    //free(code);
-    //free(table);
-    //code = NULL;
-    //exit(0);
+    free(code);
+    free(table);
+    code = NULL;
+    exit(0);
 }
 
 void printsymboltable()
