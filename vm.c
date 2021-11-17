@@ -108,8 +108,8 @@ int vm(int argc, char *argv[])
                     //RTN
                     case 0:
                         SP = BP + 1;
-                        PC = pas[SP-4];
                         BP = pas[SP-3];
+                        PC = pas[SP-4];
                         print_execution(line, "RTN", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
