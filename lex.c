@@ -44,33 +44,25 @@ void compareReserve(lexeme *list)
     {
         list[lex_index].type = procsym;
     }
-    else if (strcmp(list[lex_index].name, "begin") == 0)
+    else if (strcmp(list[lex_index].name, "do") == 0)
     {
-        list[lex_index].type = beginsym;
+        list[lex_index].type = dosym;
     }
-    else if (strcmp(list[lex_index].name, "end") == 0)
+    else if (strcmp(list[lex_index].name, "od") == 0)
     {
-        list[lex_index].type = endsym;
+        list[lex_index].type = odsym;
     }
     else if (strcmp(list[lex_index].name, "while") == 0)
     {
         list[lex_index].type = whilesym;
     }
-    else if (strcmp(list[lex_index].name, "do") == 0)
+    else if (strcmp(list[lex_index].name, "when") == 0)
     {
-        list[lex_index].type = dosym;
+        list[lex_index].type = whensym;
     }
-    else if (strcmp(list[lex_index].name, "if") == 0)
+    else if (strcmp(list[lex_index].name, "elsedo") == 0)
     {
-        list[lex_index].type = ifsym;
-    }
-    else if (strcmp(list[lex_index].name, "then") == 0)
-    {
-        list[lex_index].type = thensym;
-    }
-    else if (strcmp(list[lex_index].name, "else") == 0)
-    {
-        list[lex_index].type = elsesym;
+        list[lex_index].type = elsedosym;
     }
     else if (strcmp(list[lex_index].name, "call") == 0)
     {
@@ -84,6 +76,7 @@ void compareReserve(lexeme *list)
     {
         list[lex_index].type = readsym;
     }
+    
     else if (strcmp(list[lex_index].name, "odd") == 0)
     {
         list[lex_index].type = oddsym;
@@ -417,20 +410,11 @@ void printtokens()
             case assignsym:
                 printf("%11s\t%d", ":=", assignsym);
                 break;
-            case beginsym:
-                printf("%11s\t%d", "begin", beginsym);
+            case whensym:
+                printf("%11s\t%d", "when", whensym);
                 break;
-            case endsym:
-                printf("%11s\t%d", "end", endsym);
-                break;
-            case ifsym:
-                printf("%11s\t%d", "if", ifsym);
-                break;
-            case thensym:
-                printf("%11s\t%d", "then", thensym);
-                break;
-            case elsesym:
-                printf("%11s\t%d", "else", elsesym);
+            case elsedosym:
+                printf("%11s\t%d", "elsedo", elsedosym);
                 break;
             case whilesym:
                 printf("%11s\t%d", "while", whilesym);
