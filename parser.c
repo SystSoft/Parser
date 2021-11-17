@@ -660,11 +660,11 @@ void printparseerror(int err_code)
         default:
             printf("Implementation Error: unrecognized error code\n");
             break;
-    }/*
+    }
     free(code);
     free(table);
     code = NULL;
-    exit(0);*/
+    exit(0);
 }
 
 void printsymboltable()
