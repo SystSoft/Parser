@@ -15,7 +15,7 @@ int cIndex;
 symbol *table;
 int tIndex;
 int curlevel;
-int procedure_idx;
+int tok_index;
 
 void emit(int opname, int level, int mvalue);
 void addToSymbolTable(int k, char n[], int v, int l, int a, int m);
@@ -87,7 +87,9 @@ int MULTIPLEDECLARATIONCHECK(lexeme token)
         {
             // checks to see if it’s unmarked
             if (table[i].mark == 0 && table[i].level == curlevel)
+            {
                     return i;
+            }
         }
             
     }
@@ -146,7 +148,7 @@ void program(lexeme *list)
     
     block(list);
     
-    if (list[procedure_idx].type != periodsym)
+    if (list[tok_index].type != periodsym)
         printparseerror(1);
         
     emit(9, 0, 3);        // HALT
@@ -164,7 +166,7 @@ void block(lexeme *list)
     int x;
     
     curlevel++;
-    procedure_idx = tIndex - 1;
+    int procedure_idx = tIndex - 1;
     
     const_declaration(list);
     
@@ -187,173 +189,172 @@ void block(lexeme *list)
 void const_declaration(lexeme *list)
 {
     char *identsave = NULL;
-    if (list[procedure_idx].type == constsym)
+    if (list[tok_index].type == constsym)
     {
         do
         {
-            procedure_idx++;
-            if (list[procedure_idx].type != identsym)
+            tok_index++;
+            if (list[tok_index].type != identsym)
                 printparseerror(2);         // ident missing
                
-            int symidx = MULTIPLEDECLARATIONCHECK(list[procedure_idx]);
+            int symidx = MULTIPLEDECLARATIONCHECK(list[tok_index]);
             
             if (symidx != -1)
                 printparseerror(18);
              
-            identsave = list[procedure_idx].name;
-            procedure_idx++;
+            identsave = list[tok_index].name;
+            tok_index++;
                 
-            if (list[procedure_idx].type != assignsym)
+            if (list[tok_index].type != assignsym)
                 printparseerror(2);             // := missing
 
-            procedure_idx++;
+            tok_index++;
             
-            if (list[procedure_idx].type != numbersym)
+            if (list[tok_index].type != numbersym)
                 printparseerror(2);         // number missing
             
-            addToSymbolTable(1, identsave, atoi(list[procedure_idx].name), curlevel, 0, 0);
-            procedure_idx++;
+            addToSymbolTable(1, identsave, atoi(list[tok_index].name), curlevel, 0, 0);
+            tok_index++;
         
-        }while (list[procedure_idx].type == commasym);
+        }while (list[tok_index].type == commasym);
     
-        if (list[procedure_idx].type != semicolonsym)
+        if (list[tok_index].type != semicolonsym)
         {
-            if (list[procedure_idx].type == identsym)
+            if (list[tok_index].type == identsym)
                 printparseerror(13);
             else
                 printparseerror(14);
         }
-        procedure_idx++;
+        tok_index++;
     }
 }
 
 int var_declaration(lexeme *list)
 {
     int numVars = 0;
-    if (list[procedure_idx].type == varsym)
+    if (list[tok_index].type == varsym)
     {
         do
         {
             numVars++;
-            procedure_idx++;
+            tok_index++;
             
-            if (list[procedure_idx].type != identsym)
+            if (list[tok_index].type != identsym)
                 printparseerror(3);     // ident missing
                                 
-            int symidx = MULTIPLEDECLARATIONCHECK(list[procedure_idx]);
+            int symidx = MULTIPLEDECLARATIONCHECK(list[tok_index]);
             
             if (symidx != -1)
                 printparseerror(18);
             
             if (curlevel == 0)
-                addToSymbolTable(2, list[procedure_idx].name, 0, curlevel, numVars - 1, 0);
+                addToSymbolTable(2, list[tok_index].name, 0, curlevel, numVars - 1, 0);
             else
-                addToSymbolTable(2, list[procedure_idx].name, 0, curlevel, numVars+2, 0);
+                addToSymbolTable(2, list[tok_index].name, 0, curlevel, numVars+2, 0);
             
-            procedure_idx++;
+            tok_index++;
             
-        }while (list[procedure_idx].type == commasym);
+        }while (list[tok_index].type == commasym);
         
-        if (list[procedure_idx].type != semicolonsym)
+        if (list[tok_index].type != semicolonsym)
         {
-            if (list[procedure_idx].type == identsym)
+            if (list[tok_index].type == identsym)
                 printparseerror(13);
             else
                 printparseerror(14);
         }
-        procedure_idx++;
+        tok_index++;
     }
     return numVars;
 }
 
 void procedure_dec(lexeme *list)
 {
-        while (list[procedure_idx].type == procsym)
+        while (list[tok_index].type == procsym)
         {
-            procedure_idx++;
-            if (list[procedure_idx].type != identsym)
+            tok_index++;
+            if (list[tok_index].type != identsym)
                 printparseerror(4);
                 
-            int symidx = MULTIPLEDECLARATIONCHECK(list[procedure_idx]);
+            int symidx = MULTIPLEDECLARATIONCHECK(list[tok_index]);
             
             if (symidx != -1)
                 printparseerror(18);
                
-            addToSymbolTable(3, list[procedure_idx].name, 0, curlevel, 0, 0);
-            procedure_idx++;
-            
-            if (list[procedure_idx].type != semicolonsym)
+            addToSymbolTable(3, list[tok_index].name, 0, curlevel, 0, 0);
+            tok_index++;
+            if (list[tok_index].type != semicolonsym)
                 printparseerror(4);        // must end in semicolon
             
-            procedure_idx++;
+            tok_index++;
             block(list);
             
-            if (list[procedure_idx].type != semicolonsym)
+            if (list[tok_index].type != semicolonsym)
                 printparseerror(14);
             
-            procedure_idx++;
+            tok_index++;
             emit(2, curlevel, 0);           //RTN
         }
 }
 
 void statement(lexeme *list)
 {
-    if(list[procedure_idx].type==identsym)
+    if(list[tok_index].type==identsym)
     {
-        int symldx = findsymbol(list[procedure_idx],2);
+        int symldx = findsymbol(list[tok_index],2);
 
         if(symldx == -1)
         {
-            if (findsymbol(list[procedure_idx],1) != findsymbol(list[procedure_idx],3))
+            if (findsymbol(list[tok_index],1) != findsymbol(list[tok_index],3))
                 printparseerror(7);         // does not have kind 3
             else
                 printparseerror(6);         // does not have kind 2
         }
-        procedure_idx++;
-        if(list[procedure_idx].type!=assignsym)
+        tok_index++;
+        if(list[tok_index].type!=assignsym)
             printparseerror(5);         // missing :=
         
-        procedure_idx++;
+        tok_index++;
         expression(list);
         emit(4, curlevel-table[symldx].level, table[symldx].addr);          //STO
         return;
     }
-    if(list[procedure_idx].type==beginsym)
+    if(list[tok_index].type==dosym)
     {
         do
         {
-            procedure_idx++;
+            tok_index++;
             statement(list);
-        }while(list[procedure_idx].type==semicolonsym);
+        }while(list[tok_index].type==semicolonsym);
         
-        if(list[procedure_idx].type!=endsym)
+        if(list[tok_index].type!=odsym)
         {
-            if((list[procedure_idx].type==identsym)||(list[procedure_idx].type==beginsym)||(list[procedure_idx].type==ifsym)||(list[procedure_idx].type==whilesym)||(list[procedure_idx].type==readsym)||(list[procedure_idx].type==writesym)||(list[procedure_idx].type==callsym))
-                printparseerror(16);
-            else
+            if((list[tok_index].type==identsym)||(list[tok_index].type==whilesym)||(list[tok_index].type==readsym)||(list[tok_index].type==writesym)||(list[tok_index].type==dosym)||(list[tok_index].type==whensym)||(list[tok_index].type==callsym))
                 printparseerror(15);
+            else
+                printparseerror(16);
         }
-        procedure_idx++;
+        tok_index++;
         return;
     }
-    if(list[procedure_idx].type==ifsym)
+    if(list[tok_index].type==whensym)
     {
-        procedure_idx++;
+        tok_index++;
         condition(list);
         int jpcIdx = cIndex;
         emit(8,curlevel,0); //JPC
         
-        if(list[procedure_idx].type!=thensym)
-            printparseerror(8);
+        if(list[tok_index].type!=dosym)
+            printparseerror(8);             // do must follow when
         
-        procedure_idx++;
+        tok_index++;
         statement(list);
-        if(list[procedure_idx].type==elsesym)
+        if(list[tok_index].type==elsedosym)
         {
             int jmpIdx = cIndex;
             emit(7,curlevel,0); //JMP
             code[jpcIdx].m = cIndex*3;
-            procedure_idx++;
+            tok_index++;
             statement(list);
             code[jmpIdx].m = cIndex*3;
         }
@@ -361,16 +362,16 @@ void statement(lexeme *list)
             code[jpcIdx].m = cIndex*3;
         return;
     }
-    if(list[procedure_idx].type==whilesym)
+    if(list[tok_index].type==whilesym)
     {
-        procedure_idx++;
+        tok_index++;
         int loopIdx = cIndex;
         condition(list);
         
-        if(list[procedure_idx].type!=dosym)
+        if(list[tok_index].type!=dosym)
             printparseerror(9);
             
-        procedure_idx++;
+        tok_index++;
         int jpcIdx = cIndex;
         emit(8,curlevel,0); //JPC
         statement(list);
@@ -378,92 +379,92 @@ void statement(lexeme *list)
         code[jpcIdx].m = cIndex*3;
         return;
     }
-    if(list[procedure_idx].type==readsym)
+    if(list[tok_index].type==readsym)
     {
-        procedure_idx++;
-        if(list[procedure_idx].type!=identsym)
+        tok_index++;
+        if(list[tok_index].type!=identsym)
             printparseerror(6);         // missing identifier
             
-        int symIdx = findsymbol(list[procedure_idx],2);
+        int symIdx = findsymbol(list[tok_index],2);
         if(symIdx == -1)
         {
-            if(findsymbol(list[procedure_idx],1)!=findsymbol(list[procedure_idx],3))
+            if(findsymbol(list[tok_index],1)!=findsymbol(list[tok_index],3))
                 printparseerror(6);         //missing kind 2
             else
                 printparseerror(19);
         }
-        procedure_idx++;
+        tok_index++;
         emit(9, curlevel,2); //READ
         emit(4, curlevel-table[symIdx].level, table[symIdx].addr); //STO
         return;
     }
-    if(list[procedure_idx].type==writesym)
+    if(list[tok_index].type==writesym)
     {
-        procedure_idx++;
+        tok_index++;
         expression(list);
         emit(9,curlevel,1); //WRITE
         return;
     }
-    if(list[procedure_idx].type==callsym)
+    if(list[tok_index].type==callsym)
     {
-        procedure_idx++;
-        int symIdx = findsymbol(list[procedure_idx],3);
+        tok_index++;
+        int symIdx = findsymbol(list[tok_index],3);
         if(symIdx == -1)
         {
-            if(findsymbol(list[procedure_idx],1)!=findsymbol(list[procedure_idx],2))
+            if(findsymbol(list[tok_index],1)!=findsymbol(list[tok_index],2))
                 printparseerror(7);         //missing kind 3
             else
                 printparseerror(19);
         }
-        procedure_idx++;
+        tok_index++;
         emit(5,curlevel-table[symIdx].level,symIdx); //CAL
     }
 }
     
 void condition(lexeme *list)
 {
-    if(list[procedure_idx].type == oddsym)
+    if(list[tok_index].type == oddsym)
     {
-        procedure_idx++;
+        tok_index++;
         expression(list);
         emit(2, curlevel,6);        //ODD
     }
     else
     {
         expression(list);
-        if(list[procedure_idx].type == eqlsym)
+        if(list[tok_index].type == eqlsym)
         {
-            procedure_idx++;
+            tok_index++;
             expression(list);
             emit(2, curlevel, 8); //EQL
         }
-        else if(list[procedure_idx].type == neqsym)
+        else if(list[tok_index].type == neqsym)
         {
-            procedure_idx++;
+            tok_index++;
             expression(list);
             emit(2, curlevel, 9); //NEQ
         }
-        else if(list[procedure_idx].type == lsssym)
+        else if(list[tok_index].type == lsssym)
         {
-            procedure_idx++;
+            tok_index++;
             expression(list);
             emit(2, curlevel, 10); //LSS
         }
-        else if(list[procedure_idx].type == leqsym)
+        else if(list[tok_index].type == leqsym)
         {
-            procedure_idx++;
+            tok_index++;
             expression(list);
             emit(2, curlevel, 11); //LEQ
         }
-        else if(list[procedure_idx].type == gtrsym)
+        else if(list[tok_index].type == gtrsym)
         {
-            procedure_idx++;
+            tok_index++;
             expression(list);
             emit(2, curlevel, 12); //GTR
         }
-        else if(list[procedure_idx].type == geqsym)
+        else if(list[tok_index].type == geqsym)
         {
-            procedure_idx++;
+            tok_index++;
             expression(list);
             emit(2, curlevel, 13); //GEQ
         }
@@ -474,23 +475,23 @@ void condition(lexeme *list)
     
 void expression(lexeme *list)
 {
-    if(list[procedure_idx].type == subsym)
+    if(list[tok_index].type == subsym)
     {
-        procedure_idx++;
+        tok_index++;
         term(list);
         emit(2,curlevel,1); //NEG
         
-        while((list[procedure_idx].type==addsym)||(list[procedure_idx].type==subsym))
+        while((list[tok_index].type==addsym)||(list[tok_index].type==subsym))
         {
-            if(list[procedure_idx].type == addsym)
+            if(list[tok_index].type == addsym)
             {
-                procedure_idx++;
+                tok_index++;
                 term(list);
                 emit(2,curlevel,2); //ADD
             }
             else
             {
-                procedure_idx++;
+                tok_index++;
                 term(list);
                 emit(2,curlevel,3); //SUB
             }
@@ -498,27 +499,27 @@ void expression(lexeme *list)
     }
     else
     {
-        if(list[procedure_idx].type==addsym)
-            procedure_idx++;
+        if(list[tok_index].type==addsym)
+            tok_index++;
         term(list);
                 
-        while((list[procedure_idx].type==addsym)||(list[procedure_idx].type==subsym))
+        while((list[tok_index].type==addsym)||(list[tok_index].type==subsym))
         {
-            if(list[procedure_idx].type==addsym)
+            if(list[tok_index].type==addsym)
             {
-                procedure_idx++;
+                tok_index++;
                 term(list);
                 emit(2,curlevel,2); //ADD
             }
             else
             {
-                procedure_idx++;
+                tok_index++;
                 term(list);
                 emit(2,curlevel,3); //SUB
             }
         }
     }
-    if((list[procedure_idx].type==lparensym)||(list[procedure_idx].type==identsym)||(list[procedure_idx].type==numbersym)||(list[procedure_idx].type==oddsym)) // identifier number odd
+    if((list[tok_index].type==lparensym)||(list[tok_index].type==identsym)||(list[tok_index].type==numbersym)||(list[tok_index].type==oddsym)) // identifier number odd
         printparseerror(17);
         
 }
@@ -526,23 +527,23 @@ void expression(lexeme *list)
 void term(lexeme *list)
 {
     factor(list);
-    while((list[procedure_idx].type==multsym)||(list[procedure_idx].type==divsym)||(list[procedure_idx].type==modsym))
+    while((list[tok_index].type==multsym)||(list[tok_index].type==divsym)||(list[tok_index].type==modsym))
     {
-        if(list[procedure_idx].type==multsym)
+        if(list[tok_index].type==multsym)
         {
-            procedure_idx++;
+            tok_index++;
             factor(list);
             emit(2,curlevel,4); //MUL
         }
-        else if(list[procedure_idx].type==divsym)
+        else if(list[tok_index].type==divsym)
         {
-            procedure_idx++;
+            tok_index++;
             factor(list);
             emit(2,curlevel,5); //DIV
         }
         else
         {
-            procedure_idx++;
+            tok_index++;
             factor(list);
             emit(2,curlevel,7); //MOD
         }
@@ -551,18 +552,17 @@ void term(lexeme *list)
     
 void factor(lexeme *list)
 {
-    if(list[procedure_idx].type==identsym)
+    if(list[tok_index].type==identsym)
     {
-        int symIdx_var = findsymbol(list[procedure_idx],2);
-        int symIdx_const = findsymbol(list[procedure_idx],1);
+        int symIdx_var = findsymbol(list[tok_index],2);
+        int symIdx_const = findsymbol(list[tok_index],1);
         
         if((symIdx_var==-1)&&(symIdx_const==-1))
         {
-            if(findsymbol(list[procedure_idx],3)!=-1)
+            if(findsymbol(list[tok_index],3)!=-1)
                 printparseerror(19);
             else
             {
-                printf("hello 4 %d \n\n", findsymbol(list[procedure_idx],3));
                 printparseerror(18);
             }
         }
@@ -573,23 +573,23 @@ void factor(lexeme *list)
             emit(3, curlevel-table[symIdx_var].level, table[symIdx_var].addr);      //LOD
         else
             emit(1,curlevel,table[symIdx_const].val);
-        procedure_idx++;
+        tok_index++;
     }
-    else if(list[procedure_idx].type==numbersym)
+    else if(list[tok_index].type==numbersym)
     {
         emit(1,curlevel,0);
-        procedure_idx++;
+        tok_index++;
     }
     
-    else if(list[procedure_idx].type==lparensym)
+    else if(list[tok_index].type==lparensym)
     {
-        procedure_idx++;
+        tok_index++;
         expression(list);
     
-        if(list[procedure_idx].type!=rparensym)
+        if(list[tok_index].type!=rparensym)
             printparseerror(11);
         
-        procedure_idx++;
+        tok_index++;
     }
     else
         printparseerror(12);
@@ -660,12 +660,11 @@ void printparseerror(int err_code)
         default:
             printf("Implementation Error: unrecognized error code\n");
             break;
-    }
-    
+    }/*
     free(code);
     free(table);
     code = NULL;
-    exit(0);
+    exit(0);*/
 }
 
 void printsymboltable()
