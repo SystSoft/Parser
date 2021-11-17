@@ -46,10 +46,10 @@ instruction *parse(lexeme *list, int printTable, int printCode)
     program(list);
     
     if (printTable == 1)
-        printassemblycode();
-    
-    if (printCode == 1)
         printsymboltable();
+       
+    if (printCode == 1)
+        printassemblycode();
     
     code[cIndex].opcode = -1;
     
@@ -146,7 +146,7 @@ void program(lexeme *list)
     
     block(list);
     
-    if (list[tIndex].type != periodsym)
+    if (list[procedure_idx].type != periodsym)
         printparseerror(1);
         
     emit(9, 0, 3);        // HALT
@@ -474,7 +474,6 @@ void condition(lexeme *list)
     
 void expression(lexeme *list)
 {
-    printf("expression %s\n", list[procedure_idx].name);
     if(list[procedure_idx].type == subsym)
     {
         procedure_idx++;
@@ -526,7 +525,6 @@ void expression(lexeme *list)
     
 void term(lexeme *list)
 {
-    printf("term %s\n", list[procedure_idx-1].name);
     factor(list);
     while((list[procedure_idx].type==multsym)||(list[procedure_idx].type==divsym)||(list[procedure_idx].type==modsym))
     {
@@ -553,7 +551,6 @@ void term(lexeme *list)
     
 void factor(lexeme *list)
 {
-    printf("factor %s\n", list[procedure_idx].name);
     if(list[procedure_idx].type==identsym)
     {
         int symIdx_var = findsymbol(list[procedure_idx],2);
