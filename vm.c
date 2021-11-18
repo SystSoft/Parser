@@ -79,8 +79,8 @@ void execute_program(instruction *code, int printFlag)
     {
         // Fetch Cycle
         IR = code[PC];
-        PC += 3;
         int line = PC;    // track line number
+        PC++;
 
         // Execute Cycle
         switch(IR.opcode)
@@ -463,5 +463,5 @@ void execute_program(instruction *code, int printFlag)
          
         }
     }
-   free(pas);
+    free(pas);
 }
