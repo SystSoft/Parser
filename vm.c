@@ -9,11 +9,11 @@
 // Global Variables
 #define MAX_PAS_LENGTH 500
 
-void print_execution(int line, char *opname, struct instruction *IR, int PC, int BP, int SP, int DP, int *pas, int GP)
+void print_execution(int line, char *opname, struct instruction IR, int PC, int BP, int SP, int DP, int *pas, int GP)
 {
     int i;
     // print out instruction and registers
-    printf("%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR->l, IR->m, PC, BP, SP, DP);
+    printf("%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR.l, IR.m, PC, BP, SP, DP);
     
     // print data section
     for (i = GP; i <= DP; i++)
@@ -42,25 +42,23 @@ int base(int l, int *pas, int BP)
 
 void execute_program(instruction *code, int printFlag)
 {
-    int pas[MAX_PAS_LENGTH];
-    int halt = 1;   // allows fetch and execution to run
-    struct instruction *IR = malloc(sizeof(struct instruction));    // Instruction Register
-    int IC = 0;     // Instruction Counter
-    
-    // All initial values for pas is 0
-    int i;
-    for (i = 0; i < MAX_PAS_LENGTH; i++)
+    // variables
+    int *pas = calloc(MAX_PAS_LENGTH, sizeof(int));
+    int IC, line, halt;
+    struct instruction IR;
+    // read in program
+    IC = 0;
+    line = 0;
+    halt = 1;
+    while (code[line].opcode != -1)
     {
-        pas[i] = 0;
-    }
-    
-    // Scan in registers from input
-    while (code[IC].opcode != -1)
-    {
-        pas[IC] = code[IC].opcode;
-        pas[IC + 1] = code[IC].l;
-        pas[IC + 2] = code[IC].m;
-        IC += 3;
+        pas[IC] = code[line].opcode;
+        IC++;
+        pas[IC] = code[line].l;
+        IC++;
+        pas[IC] = code[line].m;
+        IC++;
+        line++;
     }
     
     // Initial Values
@@ -70,47 +68,50 @@ void execute_program(instruction *code, int printFlag)
     int PC = 0;         // Program counter
     int SP = MAX_PAS_LENGTH;        // Stack Pointer
     
-    // Print headers
-    printf("\t\tPC\tBP\tSP\tDP\tdata\n");
-    printf("Initial Values: %d\t%d\t%d\t%d\n", PC, BP, SP, DP);
+    if (printFlag == 1)
+    {
+        // Print headers
+        printf("\t\tPC\tBP\tSP\tDP\tdata\n");
+        printf("Initial Values: %d\t%d\t%d\t%d\n", PC, BP, SP, DP);
+    }
     
     while (halt == 1)
     {
         // Fetch Cycle
-        IR->opcode = code[PC].opcode;
-        IR->l = code[PC].l;
-        IR->m = code[PC].m;
+        IR = code[PC];
         PC += 3;
         int line = PC;    // track line number
 
         // Execute Cycle
-        switch(IR->opcode)
+        switch(IR.opcode)
         {
             //LIT
             case 1:
                 if(BP == GP)
                 {
                     DP = DP+1;
-                    pas[DP] = IR->m;
+                    pas[DP] = IR.m;
                 }
                 else
                 {
                     SP = SP-1;
-                    pas[SP] = IR->m;
+                    pas[SP] = IR.m;
                 }
-                print_execution(line, "LIT", IR, PC, BP, SP, DP, pas, GP);
+                if (printFlag == 1)
+                    print_execution(line, "LIT", IR, PC, BP, SP, DP, pas, GP);
                 break;
                 
             // OPR
             case 2:
-                switch(IR->m)
+                switch(IR.m)
                 {
                     //RTN
                     case 0:
                         SP = BP + 1;
-                        BP = pas[SP-3];
                         PC = pas[SP-4];
-                        print_execution(line, "RTN", IR, PC, BP, SP, DP, pas, GP);
+                        BP = pas[SP-3];
+                        if (printFlag == 1)
+                            print_execution(line, "RTN", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //NEG
@@ -123,7 +124,8 @@ void execute_program(instruction *code, int printFlag)
                         {
                             pas[SP] = -1*pas[SP];
                         }
-                        print_execution(line, "NEG", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "NEG", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //ADD
@@ -138,7 +140,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] + pas[SP-1];
                         }
-                        print_execution(line, "ADD", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "ADD", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //SUB
@@ -153,7 +156,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] - pas[SP-1];
                         }
-                        print_execution(line, "SUB", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "SUB", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //MUL
@@ -168,7 +172,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] * pas[SP-1];
                         }
-                        print_execution(line, "MUL", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "MUL", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //DIV
@@ -183,7 +188,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] / pas[SP-1];
                         }
-                        print_execution(line, "DIV", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "DIV", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //ODD
@@ -196,7 +202,8 @@ void execute_program(instruction *code, int printFlag)
                         {
                             pas[SP] = pas[SP] % 2;
                         }
-                        print_execution(line, "ODD", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "ODD", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //MOD
@@ -211,7 +218,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] % pas[SP-1];
                         }
-                        print_execution(line, "MOD", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "MOD", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //EQL
@@ -226,7 +234,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] == pas[SP-1];
                         }
-                        print_execution(line, "EQL", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "EQL", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //NEQ
@@ -241,7 +250,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] != pas[SP-1];
                         }
-                        print_execution(line, "NEQ", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "NEQ", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //LSS
@@ -256,7 +266,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] < pas[SP-1];
                         }
-                        print_execution(line, "LSS", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "LSS", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //LEQ
@@ -271,7 +282,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] <= pas[SP-1];
                         }
-                        print_execution(line, "LEQ", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "LEQ", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //GTR
@@ -286,7 +298,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] > pas[SP-1];
                         }
-                        print_execution(line, "GTR", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "GTR", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
                     //GEQ
@@ -301,7 +314,8 @@ void execute_program(instruction *code, int printFlag)
                             SP = SP+1;
                             pas[SP] = pas[SP] >= pas[SP-1];
                         }
-                        print_execution(line, "GEQ", IR, PC, BP, SP, DP, pas, GP);
+                        if (printFlag == 1)
+                            print_execution(line, "GEQ", IR, PC, BP, SP, DP, pas, GP);
                         break;
                 }
                 break;
@@ -311,69 +325,74 @@ void execute_program(instruction *code, int printFlag)
                 if(BP == GP)
                 {
                     DP = DP+1;
-                    pas[DP] = pas[GP+IR->m];
+                    pas[DP] = pas[GP+IR.m];
                 }
-                else if((base(IR->l, pas, BP)) == GP)
+                else if((base(IR.l, pas, BP)) == GP)
                 {
                     SP = SP-1;
-                    pas[SP] = pas[GP+IR->m];
+                    pas[SP] = pas[GP+IR.m];
                 }
                 else
                 {
                     SP = SP-1;
-                    pas[SP] = pas[(base(IR->l, pas, BP))-IR->m];
+                    pas[SP] = pas[(base(IR.l, pas, BP))-IR.m];
                 }
-                print_execution(line, "LOD", IR, PC, BP, SP, DP, pas, GP);
+                if (printFlag == 1)
+                    print_execution(line, "LOD", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
             //STO
             case 4:
                 if(BP == GP)
                 {
-                    pas[GP+IR->m] = pas[DP];
+                    pas[GP+IR.m] = pas[DP];
                     DP = DP-1;
                 }
-                else if((base(IR->l, pas, BP)) == GP)
+                else if((base(IR.l, pas, BP)) == GP)
                 {
-                    pas[GP+IR->m] = pas[SP];
+                    pas[GP+IR.m] = pas[SP];
                     SP = SP+1;
                 }
                 else
                 {
-                    pas[(base(IR->l, pas, BP))-IR->m] = pas[SP];
+                    pas[(base(IR.l, pas, BP))-IR.m] = pas[SP];
                     SP = SP+1;
                 }
-                print_execution(line, "STO", IR, PC, BP, SP, DP, pas, GP);
+                if (printFlag == 1)
+                    print_execution(line, "STO", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
             //CAL
             case 5:
                 pas[SP-1] = 0;          // Functional Value
-                pas[SP-2] = base(IR->l, pas, BP);           // Static Link
+                pas[SP-2] = base(IR.l, pas, BP);           // Static Link
                 pas[SP-3] = BP;         // Dynamic Link
                 pas[SP-4] = PC;         // Return Address
                 BP = SP-1;
-                PC = IR->m;
-                print_execution(line, "CAL", IR, PC, BP, SP, DP, pas, GP);
+                PC = IR.m;
+                if (printFlag == 1)
+                    print_execution(line, "CAL", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
             //INC
             case 6:
                 if(BP == GP)
                 {
-                    DP += IR->m;
+                    DP += IR.m;
                 }
                 else
                 {
-                    SP -= IR->m;
+                    SP -= IR.m;
                 }
-                print_execution(line, "INC", IR, PC, BP, SP, DP, pas, GP);
+                if (printFlag == 1)
+                    print_execution(line, "INC", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
             //JMP
             case 7:
-                PC = IR->m;
-                print_execution(line, "JMP", IR, PC, BP, SP, DP, pas, GP);
+                PC = IR.m;
+                if (printFlag == 1)
+                    print_execution(line, "JMP", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
             //JPC
@@ -382,7 +401,7 @@ void execute_program(instruction *code, int printFlag)
                 {
                     if(pas[DP] == 0)
                     {
-                        PC = IR->m;
+                        PC = IR.m;
                     }
                     DP = DP-1;
                 }
@@ -390,16 +409,17 @@ void execute_program(instruction *code, int printFlag)
                 {
                     if(pas[SP] == 0)
                     {
-                        PC = IR->m;
+                        PC = IR.m;
                     }
                     SP = SP+1;
                 }
-                print_execution(line, "JPC", IR, PC, BP, SP, DP, pas, GP);
+                if (printFlag == 1)
+                    print_execution(line, "JPC", IR, PC, BP, SP, DP, pas, GP);
                 break;
 
           // SYS
           case 9:
-              switch(IR->m)
+              switch(IR.m)
               {
                   case 1:
                       printf("Top of Stack Value: ");
@@ -433,12 +453,16 @@ void execute_program(instruction *code, int printFlag)
                       halt = 0;
                       break;
              }
-            print_execution(line, "SYS", IR, PC, BP, SP, DP, pas, GP);
-             break;
+            if (printFlag == 1)
+                print_execution(line, "SYS", IR, PC, BP, SP, DP, pas, GP);
+            break;
              
-         default: printf("err\t");
+         default:
+                printf("err\t");
+                free(code);
+                code = NULL;
+                return;
          
         }
     }
-    free(IR);
 }
