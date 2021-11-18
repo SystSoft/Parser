@@ -459,8 +459,6 @@ void execute_program(instruction *code, int printFlag)
              
          default:
                 printf("err\t");
-                free(code);
-                code = NULL;
                 return;
          
         }
