@@ -348,7 +348,6 @@ lexeme *lexanalyzer(char *input, int printFlag)
         printtokens();
     
     return list;
-    free(list);
 }
 
 void printtokens()
@@ -481,6 +480,6 @@ void printlexerror(int type)
     else
         printf("Implementation Error: Unrecognized Error Type\n");
     
-    free(list);
     return;
+    free(list);
 }
