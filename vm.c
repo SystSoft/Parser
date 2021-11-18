@@ -463,4 +463,5 @@ void execute_program(instruction *code, int printFlag)
          
         }
     }
+   free(pas);
 }
