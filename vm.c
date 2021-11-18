@@ -40,11 +40,8 @@ int base(int l, int *pas, int BP)
     return arb;
 }
 
-int vm(int argc, char *argv[])
+void execute_program(instruction *code, int printFlag)
 {
-    FILE * ifp;
-    ifp = fopen(argv[1], "r");
-    
     int pas[MAX_PAS_LENGTH];
     int halt = 1;   // allows fetch and execution to run
     struct instruction *IR = malloc(sizeof(struct instruction));    // Instruction Register
@@ -58,9 +55,12 @@ int vm(int argc, char *argv[])
     }
     
     // Scan in registers from input
-    while (fscanf(ifp, "%d", &pas[IC]) != EOF)
+    while (code[IC].opcode != -1)
     {
-        IC++;
+        pas[IC] = code[IC].opcode;
+        pas[IC + 1] = code[IC].l;
+        pas[IC + 2] = code[IC].m;
+        IC += 3;
     }
     
     // Initial Values
@@ -77,11 +77,11 @@ int vm(int argc, char *argv[])
     while (halt == 1)
     {
         // Fetch Cycle
-        IR->opcode = pas[PC];
-        IR->l = pas[PC + 1];
-        IR->m = pas[PC + 2];
+        IR->opcode = code[PC].opcode;
+        IR->l = code[PC].l;
+        IR->m = code[PC].m;
         PC += 3;
-        int line = (PC/3)-1;    // track line number
+        int line = PC;    // track line number
 
         // Execute Cycle
         switch(IR->opcode)
@@ -108,8 +108,8 @@ int vm(int argc, char *argv[])
                     //RTN
                     case 0:
                         SP = BP + 1;
-                        BP = pas[SP-3];
                         PC = pas[SP-4];
+                        BP = pas[SP-3];
                         print_execution(line, "RTN", IR, PC, BP, SP, DP, pas, GP);
                         break;
 
@@ -440,7 +440,5 @@ int vm(int argc, char *argv[])
          
         }
     }
-    fclose(ifp);
     free(IR);
-    return 0;
 }
