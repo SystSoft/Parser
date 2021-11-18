@@ -1,74 +1,77 @@
-/* Fall 2021 COP 3402 HW1
-   Anjaly Davis, Jennifer Nguyen
-   September 15th, 2021 */
-
+/*
+This is the skeleton vm.c for the UCF Fall 2021 Systems Software 
+Project, HW4. Add whatever you want, but make sure to leave the
+print functions as they are to make sure you get your grade as
+quickly as possible. 
+*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "compiler.h"
 
-// Global Variables
-#define MAX_PAS_LENGTH 500
+#define MAX_PAS_LENGTH 3000
 
 void print_execution(int line, char *opname, struct instruction IR, int PC, int BP, int SP, int DP, int *pas, int GP)
 {
-    int i;
-    // print out instruction and registers
-    printf("%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR.l, IR.m, PC, BP, SP, DP);
-    
-    // print data section
-    for (i = GP; i <= DP; i++)
-        printf("%d ", pas[i]);
-    
-    printf("\n");
-    
-    // print stack
-    printf("\tstack : ");
-    for (i = MAX_PAS_LENGTH - 1; i >= SP; i--)
-        printf("%d ", pas[i]);
-    
-    printf("\n");
+	int i;
+	// print out instruction and registers
+	printf("%2d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t", line, opname, IR.l, IR.m, PC, BP, SP, DP);
+	
+	// print data section
+	for (i = GP; i <= DP; i++)
+		printf("%d ", pas[i]);
+		
+	printf("\n");
+	
+	// print stack
+	printf("\tstack : ");
+	for (i = MAX_PAS_LENGTH - 1; i >= SP; i--)
+		printf("%d ", pas[i]);
+	printf("\n");
 }
 
 int base(int l, int *pas, int BP)
 {
-    int arb = BP;   // arb = activation record base
-    while ( l > 0)     //find base L levels down
-    {
-        arb = pas[arb];
-        l--;
-    }
-    return arb;
+	int ctr = l;
+	int arb = BP;
+	while (ctr > 0)
+	{
+		arb = pas[arb-1];
+		ctr--;
+	}
+	return arb;
 }
 
 void execute_program(instruction *code, int printFlag)
 {
-    // variables
-    int *pas = calloc(MAX_PAS_LENGTH, sizeof(int));
-    int IC, line, halt;
-    struct instruction IR;
-    // read in program
-    IC = 0;
-    line = 0;
-    halt = 1;
-    while (code[line].opcode != -1)
-    {
-        pas[IC] = code[line].opcode;
-        IC++;
-        pas[IC] = code[line].l;
-        IC++;
-        pas[IC] = code[line].m;
-        IC++;
-        line++;
-    }
-    
-    // Initial Values
+	// variables
+	int *pas = calloc(MAX_PAS_LENGTH, sizeof(int));
+	int IC, line, halt;
+	struct instruction IR;
+	
+	// read in program
+	IC = 0;
+	line = 0;
+	halt = 1;
+	while (code[line].opcode != -1)
+	{
+		pas[IC] = code[line].opcode;
+		IC++;
+		pas[IC] = code[line].l;
+		IC++;
+		pas[IC] = code[line].m;
+		IC++;
+		line++;
+	}
+	
+	// Initial Values
     int GP = IC;        // Global Data Pointer
     int DP = IC - 1;    // Data Pointer
     int BP = IC;        // Base Pointer
     int PC = 0;         // Program counter
     int SP = MAX_PAS_LENGTH;        // Stack Pointer
-    
-    if (printFlag == 1)
+	
+	if (printFlag == 1)
     {
         // Print headers
         printf("\t\tPC\tBP\tSP\tDP\tdata\n");
@@ -452,8 +455,8 @@ void execute_program(instruction *code, int printFlag)
                   case 3:
                       halt = 0;
                       break;
-             }
-            if (printFlag == 1)
+                }
+				if (printFlag == 1)
                 print_execution(line, "SYS", IR, PC, BP, SP, DP, pas, GP);
             break;
              
