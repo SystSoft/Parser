@@ -124,6 +124,7 @@ int letterFirst(char *input, lexeme *list, int k)
     compareReserve(list);
     
     return length;
+    free(identBuffer);
 }
 
 int digitFirst(char *input, lexeme *list, int k)
@@ -168,6 +169,7 @@ int digitFirst(char *input, lexeme *list, int k)
     list[lex_index].type = numbersym;
     
     return length;
+    free(digitBuffer);
 }
 
 int isSymbol(char *input, lexeme *list, int k)
@@ -297,6 +299,7 @@ int isSymbol(char *input, lexeme *list, int k)
         return '\0';
     }
     return length;
+    free(symBuffer);
 }
 
 lexeme *lexanalyzer(char *input, int printFlag)
@@ -345,6 +348,7 @@ lexeme *lexanalyzer(char *input, int printFlag)
         printtokens();
     
     return list;
+    free(list);
 }
 
 void printtokens()
