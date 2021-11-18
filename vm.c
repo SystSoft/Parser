@@ -1,9 +1,3 @@
-/*
-This is the skeleton vm.c for the UCF Fall 2021 Systems Software 
-Project, HW4. Add whatever you want, but make sure to leave the
-print functions as they are to make sure you get your grade as
-quickly as possible. 
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
