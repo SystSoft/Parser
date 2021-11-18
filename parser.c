@@ -352,7 +352,7 @@ void statement(lexeme *list)
         if(list[tok_index].type==elsedosym)
         {
             int jmpIdx = cIndex;
-            emit(7,curlevel,0); //JMP
+            emit(7,curlevel,jmpIdx); //JMP
             code[jpcIdx].m = cIndex*3;
             tok_index++;
             statement(list);
