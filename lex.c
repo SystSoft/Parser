@@ -124,7 +124,6 @@ int letterFirst(char *input, lexeme *list, int k)
     compareReserve(list);
     
     return length;
-    free(identBuffer);
 }
 
 int digitFirst(char *input, lexeme *list, int k)
@@ -169,7 +168,6 @@ int digitFirst(char *input, lexeme *list, int k)
     list[lex_index].type = numbersym;
     
     return length;
-    free(digitBuffer);
 }
 
 int isSymbol(char *input, lexeme *list, int k)
@@ -236,7 +234,6 @@ int isSymbol(char *input, lexeme *list, int k)
                 list[lex_index].type = neqsym;
                 break;
             }
-            
             else if (strcmp(list[lex_index].name, "<=") == 0)
             {
                 list[lex_index].type = leqsym;
@@ -299,7 +296,6 @@ int isSymbol(char *input, lexeme *list, int k)
         return '\0';
     }
     return length;
-    free(symBuffer);
 }
 
 lexeme *lexanalyzer(char *input, int printFlag)
@@ -425,6 +421,9 @@ void printtokens()
             case dosym:
                 printf("%11s\t%d", "do", dosym);
                 break;
+            case odsym:
+                printf("%11s\t%d", "od", odsym);
+                break;
             case callsym:
                 printf("%11s\t%d", "call", callsym);
                 break;
@@ -480,6 +479,6 @@ void printlexerror(int type)
     else
         printf("Implementation Error: Unrecognized Error Type\n");
     
-    return;
     free(list);
+    return;
 }
